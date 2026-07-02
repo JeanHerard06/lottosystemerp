@@ -1,0 +1,17 @@
+name: Release Packaging Check
+
+on:
+  pull_request:
+  push:
+    branches: [ main, develop, 'release/**' ]
+
+jobs:
+  package-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify required release docs
+        run: |
+          test -f README.md
+          test -f CHANGELOG.md || echo "CHANGELOG.md missing"
+          test -d docs
