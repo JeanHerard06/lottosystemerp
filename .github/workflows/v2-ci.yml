@@ -1,0 +1,19 @@
+name: v2 CI
+
+on:
+  pull_request:
+    branches: ["develop/v2.0", "master"]
+  push:
+    branches: ["develop/v2.0"]
+
+jobs:
+  php-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: PHP syntax check
+        run: |
+          find . -type f -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
