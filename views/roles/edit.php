@@ -1,0 +1,7 @@
+<?php
+require "../../config/database.php"; require "../../includes/header.php"; require_once "../../app/Helpers/permissions.php"; require_permission($pdo,'roles.manage'); require "../../includes/sidebar.php"; require "../../includes/topbar.php";
+$id=(int)($_GET['id']??0); $stmt=$pdo->prepare("SELECT * FROM roles WHERE id=?"); $stmt->execute([$id]); $role=$stmt->fetch(); if(!$role) die('Rôle introuvable');
+$perms=visible_permissions($pdo); $stmt=$pdo->prepare("SELECT permission_id FROM role_permissions WHERE role_id=?"); $stmt->execute([$id]); $assigned=array_column($stmt->fetchAll(),'permission_id');
+?>
+<h1 class="text-2xl font-bold mb-5">Modifier rôle</h1><form action="../../actions/roles/update.php" method="post" class="bg-white rounded-xl shadow p-5 max-w-2xl"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$role['id'] ?>"><input name="name" value="<?= e($role['name']) ?>" class="w-full border p-3 rounded mb-3" required><input name="slug" value="<?= e($role['slug']) ?>" class="w-full border p-3 rounded mb-3" required><div class="grid md:grid-cols-2 gap-2 mb-4"><?php foreach($perms as $p): ?><label class="border rounded p-2"><input type="checkbox" name="permission_ids[]" value="<?= (int)$p['id'] ?>" <?= in_array($p['id'],$assigned)?'checked':'' ?>> <?= e($p['name']) ?></label><?php endforeach; ?></div><button class="bg-black text-white px-5 py-3 rounded">Mettre à jour</button></form>
+<?php require "../../includes/footer.php"; ?>

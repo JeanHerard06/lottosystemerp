@@ -1,0 +1,14 @@
+/.idea/
+/storage/logs/*.log
+/storage/backups/*.sql
+config/local.php
+*.zip
+
+# IDE / local environment
+.idea/
+.vscode/
+.env
+*.log
+storage/logs/*
+storage/backups/*
+storage/uploads/tmp/*
