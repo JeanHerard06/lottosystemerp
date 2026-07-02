@@ -1,0 +1,8 @@
+# Lotto ERP Enterprise code ownership
+* @JeanHerard06
+
+/app/ @JeanHerard06
+/actions/ @JeanHerard06
+/api/ @JeanHerard06
+/database/ @JeanHerard06
+/docs/ @JeanHerard06
