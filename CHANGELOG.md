@@ -40,3 +40,19 @@
 - Added backward-compatible CSRF verification alias.
 - Hardened legacy blocage/limite endpoints by delegating to canonical tenant-scoped actions.
 - Added automated action security audit.
+
+## [1.0.0-rc1.4] - 2026-07-18
+
+### Added
+- Enterprise `HealthService`, `SystemDiagnosticService`, `BackupService` and `VersionService`.
+- System Diagnostics page and persisted JSON reports.
+- Version and deployment information page.
+- SHA-256 metadata and controlled downloads for SQL backups.
+
+### Changed
+- Backup creation now requires POST, authentication, permission and CSRF validation.
+- System Health UI now reports operational, warning and critical checks through one service.
+
+### Security
+- Removed state-changing backup creation through GET.
+- Added backup filename validation and path traversal protection.
