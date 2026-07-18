@@ -119,9 +119,13 @@ if (!function_exists('render_sidebar_nav')) {
                 <?php endif; ?>
                 <?php if (has_permission($pdo, 'health.view')): ?>
                     <a href="/views/settings/health.php" class="block px-4 py-3 rounded hover:bg-yellow-500 hover:text-black transition">Santé système</a>
+                    <a href="/views/settings/diagnostics.php" class="block px-4 py-3 rounded hover:bg-yellow-500 hover:text-black transition">Diagnostics</a>
                     <a href="/views/settings/checklist.php" class="block px-4 py-3 rounded hover:bg-yellow-500 hover:text-black transition">Checklist QA</a>
                 <?php endif; ?>
                 <a href="/views/settings/backups.php" class="block px-4 py-3 rounded hover:bg-yellow-500 hover:text-black transition">Sauvegardes</a>
+                <?php if (has_permission($pdo, 'system.settings')): ?>
+                    <a href="/views/settings/version.php" class="block px-4 py-3 rounded hover:bg-yellow-500 hover:text-black transition">Version & déploiement</a>
+                <?php endif; ?>
                 <?php if (has_permission($pdo, 'logs.view')): ?>
                     <a href="/views/logs/index.php" class="block px-4 py-3 rounded hover:bg-yellow-500 hover:text-black transition">Journal d’audit</a>
                 <?php endif; ?>

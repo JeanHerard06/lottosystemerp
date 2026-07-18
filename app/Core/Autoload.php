@@ -1,14 +1,21 @@
 <?php
 
-spl_autoload_register(function (string $class): void {
+declare(strict_types=1);
+
+spl_autoload_register(static function (string $class): void {
     $base = dirname(__DIR__);
+    $class = ltrim($class, '\\');
+    $relative = str_replace('\\', DIRECTORY_SEPARATOR, $class) . '.php';
+
     $paths = [
-        $base . '/Core/' . $class . '.php',
-        $base . '/Repositories/' . $class . '.php',
-        $base . '/Services/' . $class . '.php',
-        $base . '/Middleware/' . $class . '.php',
-        $base . '/Controllers/' . $class . '.php',
-        $base . '/Models/' . $class . '.php',
+        $base . DIRECTORY_SEPARATOR . $relative,
+        $base . '/Core/' . basename($relative),
+        $base . '/Contracts/' . basename($relative),
+        $base . '/Repositories/' . basename($relative),
+        $base . '/Services/' . basename($relative),
+        $base . '/Middleware/' . basename($relative),
+        $base . '/Controllers/' . basename($relative),
+        $base . '/Models/' . basename($relative),
     ];
 
     foreach ($paths as $path) {
