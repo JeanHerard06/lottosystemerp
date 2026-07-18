@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../app/Helpers/cash_sessions.php';
 require_once __DIR__ . '/../../app/Helpers/tenant.php';
 
 require_permission($pdo, 'finances.manage');
+require_post();
 verify_csrf();
 
 $agentId = (int)($_POST['agent_id'] ?? 0);

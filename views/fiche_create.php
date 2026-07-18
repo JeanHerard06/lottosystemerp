@@ -6,6 +6,7 @@ require_once __DIR__ . '/../app/Helpers/fiches.php';
 require_once __DIR__ . '/../app/Helpers/tenant.php';
 require_once __DIR__ . '/../app/Helpers/cash_sessions.php';
 require_once __DIR__ . '/../app/Helpers/lotteries.php';
+require_once __DIR__ . '/../app/Helpers/game_engine.php';
 require_permission($pdo, 'fiches.create');
 require_once __DIR__ . '/../includes/sidebar.php';
 require_once __DIR__ . '/../includes/topbar.php';
@@ -19,6 +20,11 @@ if (in_array(current_user_role(), ['admin','super_admin'], true) || !$tenantId) 
     $stmt = $pdo->prepare("SELECT id, name, draw_time, close_before_minutes, sales_status FROM lotteries WHERE status = 1 AND sales_status = 'open' AND (tenant_id = ? OR tenant_id IS NULL) ORDER BY name");
     $stmt->execute([$tenantId]);
     $lotteries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+$gameTypes = game_engine_types($pdo, $tenantId, true);
+$gameOptionsHtml = '';
+foreach ($gameTypes as $game) {
+    $gameOptionsHtml .= '<option value="' . e($game['code']) . '">' . e($game['name']) . '</option>';
 }
 ?>
 <div class="flex justify-between items-center mb-5">
@@ -64,7 +70,7 @@ if (in_array(current_user_role(), ['admin','super_admin'], true) || !$tenantId) 
             <tbody id="plays">
                 <tr>
                     <td class="p-2"><input name="numbers[]" placeholder="Ex: 12 ou 12-45" class="number-input w-full border p-3 rounded" required></td>
-                    <td class="p-2"><select name="types[]" class="w-full border p-3 rounded"><option value="borlette">Borlette</option><option value="mariage">Mariage</option><option value="lotto3">Lotto 3</option><option value="lotto4">Lotto 4</option></select></td>
+                    <td class="p-2"><select name="types[]" class="w-full border p-3 rounded"><?= $gameOptionsHtml ?></select></td>
                     <td class="p-2"><input type="number" step="0.01" min="1" name="amounts[]" placeholder="0.00" class="amount-input w-full border p-3 rounded" required></td>
                     <td class="p-2"><button type="button" onclick="removeLine(this)" class="bg-red-600 text-white px-3 py-2 rounded">X</button></td>
                 </tr>
@@ -81,7 +87,7 @@ if (in_array(current_user_role(), ['admin','super_admin'], true) || !$tenantId) 
 
 <script>
 function lineHtml(){
-  return `<tr><td class="p-2"><input name="numbers[]" placeholder="Ex: 12 ou 12-45" class="number-input w-full border p-3 rounded" required></td><td class="p-2"><select name="types[]" class="w-full border p-3 rounded"><option value="borlette">Borlette</option><option value="mariage">Mariage</option><option value="lotto3">Lotto 3</option><option value="lotto4">Lotto 4</option></select></td><td class="p-2"><input type="number" step="0.01" min="1" name="amounts[]" placeholder="0.00" class="amount-input w-full border p-3 rounded" required></td><td class="p-2"><button type="button" onclick="removeLine(this)" class="bg-red-600 text-white px-3 py-2 rounded">X</button></td></tr>`;
+  return `<tr><td class="p-2"><input name="numbers[]" placeholder="Ex: 12 ou 12-45" class="number-input w-full border p-3 rounded" required></td><td class="p-2"><select name="types[]" class="w-full border p-3 rounded"><?= $gameOptionsHtml ?></select></td><td class="p-2"><input type="number" step="0.01" min="1" name="amounts[]" placeholder="0.00" class="amount-input w-full border p-3 rounded" required></td><td class="p-2"><button type="button" onclick="removeLine(this)" class="bg-red-600 text-white px-3 py-2 rounded">X</button></td></tr>`;
 }
 function addPlay(){ document.getElementById('plays').insertAdjacentHTML('beforeend', lineHtml()); updateTotal(); }
 function removeLine(btn){ if(document.querySelectorAll('#plays tr').length > 1){ btn.closest('tr').remove(); updateTotal(); } }

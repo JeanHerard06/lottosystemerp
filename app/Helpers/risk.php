@@ -1,14 +1,16 @@
 <?php
+require_once __DIR__ . '/../Services/TimeService.php';
 
 function risk_current_time(): string
 {
-    return date('Y-m-d H:i:s');
+    return TimeService::sqlNow();
 }
 
 function active_blocage_match(PDO $pdo, string $number, string $gameType, ?int $lotteryId, ?int $agencyId): ?array
 {
-    $stmt = $pdo->prepare("\n        SELECT *\n        FROM blocages\n        WHERE status = 'active'\n          AND (number_value = ? OR number_value = '*' OR number_value IS NULL OR number_value = '')\n          AND (game_type IS NULL OR game_type = '' OR game_type = ? OR game_type = '*')\n          AND (lottery_id IS NULL OR lottery_id = ?)\n          AND (agency_id IS NULL OR agency_id = ?)\n          AND (starts_at IS NULL OR starts_at <= NOW())\n          AND (ends_at IS NULL OR ends_at >= NOW())\n        ORDER BY id DESC\n        LIMIT 1\n    ");
-    $stmt->execute([$number, $gameType, $lotteryId, $agencyId]);
+    $stmt = $pdo->prepare("\n        SELECT *\n        FROM blocages\n        WHERE status = 'active'\n          AND (number_value = ? OR number_value = '*' OR number_value IS NULL OR number_value = '')\n          AND (game_type IS NULL OR game_type = '' OR game_type = ? OR game_type = '*')\n          AND (lottery_id IS NULL OR lottery_id = ?)\n          AND (agency_id IS NULL OR agency_id = ?)\n          AND (starts_at IS NULL OR starts_at <= ?)\n          AND (ends_at IS NULL OR ends_at >= ?)\n        ORDER BY id DESC\n        LIMIT 1\n    ");
+    $now = TimeService::sqlNow();
+    $stmt->execute([$number, $gameType, $lotteryId, $agencyId, $now, $now]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ?: null;
 }
@@ -22,8 +24,8 @@ function matching_limits(PDO $pdo, string $number, string $gameType, ?int $lotte
 
 function played_amount_for_limit(PDO $pdo, array $limit, string $number, string $gameType, ?int $lotteryId, ?int $agencyId): float
 {
-    $where = ["fd.number_played = ?", "f.status <> 'cancelled'", "DATE(f.created_at) = CURDATE()"];
-    $params = [$number];
+    $where = ["fd.number_played = ?", "f.status <> 'cancelled'", "DATE(f.created_at) = ?"];
+    $params = [$number, TimeService::today()];
 
     if (!empty($limit['game_type']) && $limit['game_type'] !== '*') {
         $where[] = 'fd.play_type = ?';
@@ -84,7 +86,7 @@ function validate_risk_before_sale(PDO $pdo, array $agent, ?int $lotteryId, arra
 
 function risk_exposure(PDO $pdo, ?string $date = null): array
 {
-    $date = $date ?: date('Y-m-d');
+    $date = $date ?: TimeService::today();
     $stmt = $pdo->prepare("\n        SELECT fd.number_played, fd.play_type, COALESCE(l.name, 'Toutes') AS lottery_name,\n               COALESCE(SUM(fd.amount),0) AS total_played, COUNT(*) AS lines_count\n        FROM fiche_details fd\n        JOIN fiches f ON f.id = fd.fiche_id\n        LEFT JOIN lotteries l ON l.id = f.lottery_id\n        WHERE DATE(f.created_at)=? AND f.status <> 'cancelled'\n        GROUP BY fd.number_played, fd.play_type, f.lottery_id\n        ORDER BY total_played DESC\n        LIMIT 20\n    ");
     $stmt->execute([$date]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../app/Helpers/csrf.php';
 require_once __DIR__ . '/../../app/Helpers/audit.php';
 
 require_permission($pdo, 'lottery_schedules.manage');
+require_post();
 csrf_verify();
 
 $id = (int)($_POST['id'] ?? 0);

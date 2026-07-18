@@ -5,13 +5,16 @@ require_once __DIR__ . '/../../app/Helpers/security.php';
 require_once __DIR__ . '/../../app/Helpers/csrf.php';
 require_once __DIR__ . '/../../app/Helpers/permissions.php';
 require_once __DIR__ . '/../../app/Helpers/audit.php';
+require_once __DIR__ . '/../../app/Helpers/tenant.php';
+require_once __DIR__ . '/../../app/Helpers/game_engine.php';
 
 require_permission($pdo, 'commissions.manage');
+require_post();
 verify_csrf();
 
 $agentId = (int)($_POST['agent_id'] ?? 0);
 $rates = $_POST['rates'] ?? [];
-$allowed = ['borlette','mariage','lotto3','lotto4'];
+$allowed = array_column(game_engine_types($pdo, current_tenant_id() ?? 0, true), 'code');
 if ($agentId <= 0) die('Agent invalide.');
 
 $pdo->beginTransaction();

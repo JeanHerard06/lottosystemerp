@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../Services/TimeService.php';
 function invoice_status(float $total, float $paid): string
 {
     if ($paid <= 0) {
@@ -28,7 +29,7 @@ function tenant_access_is_valid(array $tenant): bool
     if (($tenant['status'] ?? '') !== 'active') {
         return false;
     }
-    if (!empty($tenant['expires_at']) && strtotime($tenant['expires_at']) < strtotime(date('Y-m-d'))) {
+    if (!empty($tenant['expires_at']) && strtotime($tenant['expires_at']) < strtotime(TimeService::today())) {
         return false;
     }
     return true;

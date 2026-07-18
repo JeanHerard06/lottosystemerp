@@ -2,8 +2,9 @@
 
 namespace App\Services\Payments;
 
+require_once dirname(__DIR__) . '/TimeService.php';
+
 use PDO;
-use Exception;
 
 class PaymentService
 {
@@ -11,7 +12,7 @@ class PaymentService
 
     public function createAttempt(int $tenantId, ?int $invoiceId, string $gateway, float $amount, string $currency = 'USD', ?int $userId = null): string
     {
-        $reference = 'PAY-' . date('YmdHis') . '-' . bin2hex(random_bytes(4));
+        $reference = 'PAY-' . \TimeService::now()->format('YmdHis') . '-' . bin2hex(random_bytes(4));
         $stmt = $this->pdo->prepare("INSERT INTO payment_attempts
             (tenant_id, invoice_id, gateway_code, reference, amount, currency, status, created_by)
             VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)");
@@ -21,17 +22,18 @@ class PaymentService
 
     public function markPaid(string $reference, ?string $externalReference = null): void
     {
+        $now = \TimeService::sqlNow();
         $stmt = $this->pdo->prepare("UPDATE payment_attempts
-            SET status='paid', external_reference=COALESCE(?, external_reference), paid_at=NOW(), updated_at=NOW()
+            SET status='paid', external_reference=COALESCE(?, external_reference), paid_at=?, updated_at=?
             WHERE reference=? AND status IN ('pending','processing')");
-        $stmt->execute([$externalReference, $reference]);
+        $stmt->execute([$externalReference, $now, $now, $reference]);
     }
 
     public function markFailed(string $reference, string $reason): void
     {
         $stmt = $this->pdo->prepare("UPDATE payment_attempts
-            SET status='failed', failed_reason=?, updated_at=NOW()
+            SET status='failed', failed_reason=?, updated_at=?
             WHERE reference=?");
-        $stmt->execute([$reason, $reference]);
+        $stmt->execute([$reason, \TimeService::sqlNow(), $reference]);
     }
 }

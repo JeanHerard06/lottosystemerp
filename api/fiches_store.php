@@ -5,6 +5,7 @@ require_once __DIR__ . '/../app/Helpers/risk.php';
 require_once __DIR__ . '/../app/Helpers/finance.php';
 require_once __DIR__ . '/../app/Helpers/cash_sessions.php';
 require_once __DIR__ . '/../app/Helpers/lotteries.php';
+require_once __DIR__ . '/../app/Helpers/game_engine.php';
 
 $user = api_user($pdo);
 $agent = api_agent($pdo, $user);
@@ -17,15 +18,14 @@ if (!is_array($items) || count($items) < 1) api_response(false, ['message'=>'Auc
 
 $tenantId = $user['tenant_id'] ? (int)$user['tenant_id'] : null;
 $lotteryId = !empty($payload['lottery_id']) ? (int)$payload['lottery_id'] : null;
-$allowedTypes = ['borlette','mariage','lotto3','lotto4'];
 $lines = [];
 $total = 0.0;
 foreach ($items as $i => $it) {
     $number = trim((string)($it['number'] ?? ''));
     $type = (string)($it['type'] ?? 'borlette');
     $amount = (float)($it['amount'] ?? 0);
-    if ($number === '' || !preg_match('/^[0-9]{1,4}(\-[0-9]{1,4})?$/', $number)) api_response(false,['message'=>'Numéro invalide ligne '.($i+1)],422);
-    if (!in_array($type, $allowedTypes, true)) api_response(false,['message'=>'Type de jeu invalide'],422);
+    $gameError = game_engine_validate_play($pdo, $type, $number, $tenantId);
+    if ($gameError !== null) api_response(false,['message'=>'Jeu invalide ligne '.($i+1).': '.$gameError],422);
     if ($amount <= 0) api_response(false,['message'=>'Montant invalide'],422);
     $lines[] = ['number'=>$number,'type'=>$type,'amount'=>$amount];
     $total += $amount;

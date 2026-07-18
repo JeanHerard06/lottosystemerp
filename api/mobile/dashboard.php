@@ -1,26 +1,26 @@
 <?php
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/../../app/Helpers/mobile_dashboard_metrics.php';
+
 $user = mobile_user($pdo);
 $agent = mobile_agent($pdo, (int)$user['id']);
 
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM fiches WHERE agent_id = ? AND DATE(created_at)=CURDATE()");
-$stmt->execute([$agent['id']]);
-$todayFiches = (int)$stmt->fetchColumn();
-
-$stmt = $pdo->prepare("SELECT COALESCE(SUM(total_amount),0) FROM fiches WHERE agent_id = ? AND DATE(created_at)=CURDATE()");
-$stmt->execute([$agent['id']]);
-$todaySales = (float)$stmt->fetchColumn();
-
-$stmt = $pdo->prepare("SELECT COALESCE(SUM(gain_amount),0) FROM fiches WHERE agent_id = ? AND DATE(created_at)=CURDATE()");
-$stmt->execute([$agent['id']]);
-$todayGains = (float)$stmt->fetchColumn();
-
-mobile_json([
-    'success' => true,
-    'data' => [
-        'today_fiches' => $todayFiches,
-        'today_sales' => $todaySales,
-        'today_gains' => $todayGains,
-        'balance' => (float)$agent['balance'],
-    ]
-]);
+try {
+    $metrics = mobile_agent_dashboard_metrics($pdo, $user, $agent);
+    mobile_json([
+        'success' => true,
+        'message' => 'Dashboard agent chargé.',
+        'data' => $metrics,
+    ]);
+} catch (Throwable $e) {
+    mobile_json([
+        'success' => false,
+        'message' => 'Erreur calcul dashboard: ' . $e->getMessage(),
+        'data' => null,
+        'debug' => [
+            'exception' => get_class($e),
+            'file' => basename($e->getFile()),
+            'line' => $e->getLine(),
+        ],
+    ], 500);
+}

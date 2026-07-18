@@ -84,7 +84,7 @@ function tenant_is_active(PDO $pdo, ?int $tenantId): bool
     $stmt->execute([$tenantId]);
     $tenant = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$tenant || $tenant['status'] !== 'active') { return false; }
-    if (!empty($tenant['expires_at']) && $tenant['expires_at'] < date('Y-m-d')) { return false; }
+    if (!empty($tenant['expires_at']) && $tenant['expires_at'] < TimeService::today()) { return false; }
     return true;
 }
 
@@ -235,4 +235,10 @@ function ensure_agent_visibility(PDO $pdo, int $agentId): array
         }
     }
     return $agent;
+}
+
+// Apply the authenticated tenant's business timezone for web requests.
+if (isset($pdo) && $pdo instanceof PDO && !empty($_SESSION['tenant_id'])) {
+    require_once __DIR__ . '/../Services/TimeService.php';
+    TimeService::boot($pdo, (int)$_SESSION['tenant_id']);
 }

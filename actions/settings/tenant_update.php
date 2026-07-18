@@ -8,6 +8,7 @@ require_once __DIR__ . '/../../app/Helpers/audit.php';
 require_once __DIR__ . '/../../app/Helpers/settings.php';
 
 require_permission($pdo, 'settings.manage');
+require_post();
 csrf_verify();
 
 $tenantId = is_super_admin() ? (int)($_POST['tenant_id'] ?? 0) : (int)current_tenant_id();
