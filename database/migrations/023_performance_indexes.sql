@@ -8,7 +8,7 @@ CREATE INDEX IF NOT EXISTS idx_fiche_details_fiche ON fiche_details(fiche_id);
 CREATE INDEX IF NOT EXISTS idx_fiche_details_number ON fiche_details(number_played);
 
 CREATE INDEX IF NOT EXISTS idx_gains_tenant_status ON gains(tenant_id, status);
-CREATE INDEX IF NOT EXISTS idx_gains_fiche ON gains(fiche_id);
+CREATE INDEX IF NOT EXISTS idx_gains_detail ON gains(fiche_detail_id);
 
 CREATE INDEX IF NOT EXISTS idx_agent_transactions_tenant_date ON agent_transactions(tenant_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_agent_transactions_agent_date ON agent_transactions(agent_id, created_at);

@@ -8,6 +8,7 @@ require_once __DIR__ . '/../../app/Helpers/audit.php';
 require_once __DIR__ . '/../../app/Helpers/finance.php';
 
 require_permission($pdo, 'transactions.void');
+require_post();
 verify_csrf();
 
 $id = (int)($_POST['id'] ?? 0);

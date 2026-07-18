@@ -11,6 +11,7 @@ require_once __DIR__ . '/../app/Helpers/risk.php';
 require_once __DIR__ . '/../app/Helpers/finance.php';
 require_once __DIR__ . '/../app/Helpers/cash_sessions.php';
 require_once __DIR__ . '/../app/Helpers/lotteries.php';
+require_once __DIR__ . '/../app/Helpers/game_engine.php';
 
 require_permission($pdo, 'fiches.create');
 require_post();
@@ -26,7 +27,6 @@ $lotteryId = isset($_POST['lottery_id']) && $_POST['lottery_id'] !== '' ? (int)$
 $numbers = $_POST['numbers'] ?? [];
 $types = $_POST['types'] ?? [];
 $amounts = $_POST['amounts'] ?? [];
-$allowedTypes = ['borlette', 'mariage', 'lotto3', 'lotto4'];
 
 if (!$numbers || count($numbers) !== count($types) || count($numbers) !== count($amounts)) {
     die('Fiche invalide: lignes incomplètes.');
@@ -39,11 +39,9 @@ foreach ($numbers as $i => $rawNumber) {
     $type = trim((string)$types[$i]);
     $amount = (float)$amounts[$i];
 
-    if ($number === '' || !preg_match('/^[0-9]{1,4}(\-[0-9]{1,4})?$/', $number)) {
-        die('Numéro invalide sur la ligne ' . ($i + 1));
-    }
-    if (!in_array($type, $allowedTypes, true)) {
-        die('Type de jeu invalide sur la ligne ' . ($i + 1));
+    $gameError = game_engine_validate_play($pdo, $type, $number, $tenantId);
+    if ($gameError !== null) {
+        die('Jeu invalide sur la ligne ' . ($i + 1) . ': ' . e($gameError));
     }
     if ($amount <= 0) {
         die('Montant invalide sur la ligne ' . ($i + 1));

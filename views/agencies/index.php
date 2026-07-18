@@ -21,18 +21,22 @@ $sql = "
 $stmt = $pdo->prepare($sql);
 $stmt->execute($tenantParams);
 $agencies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$totalAgents = array_sum(array_map(fn($agency) => (int)$agency['total_agents'], $agencies));
+
+ui_page_header('Agences', 'Les utilisateurs tenant voient uniquement les agences de leur organisation.', [
+    ['label' => 'Ajouter agence', 'href' => 'create.php', 'class' => 'ui-btn ui-btn-warning', 'icon' => '+'],
+]);
 ?>
-<div class="flex justify-between items-center mb-5">
-    <div>
-        <h1 class="text-2xl font-bold">Agences</h1>
-        <p class="text-gray-500">Les utilisateurs tenant voient uniquement les agences de leur tenant.</p>
-    </div>
-    <a href="create.php" class="bg-yellow-500 text-white px-4 py-2 rounded">+ Ajouter agence</a>
+<div class="ui-stat-grid">
+    <?php ui_stat_card('Agences', (string)count($agencies), 'blue', 'Dans le périmètre visible', null, '🏢'); ?>
+    <?php ui_stat_card('Agents rattachés', (string)$totalAgents, 'green', 'Total des équipes', null, '👥'); ?>
+    <?php ui_stat_card('Moyenne', count($agencies) > 0 ? number_format($totalAgents / count($agencies), 1) : '0', 'slate', 'Agents par agence', null, '∅'); ?>
 </div>
 
-<table class="w-full bg-white rounded shadow">
+<div class="ui-table-panel">
+<table class="w-full">
     <thead>
-        <tr class="bg-gray-200 text-left">
+        <tr class="text-left">
             <?php if (is_super_admin()): ?><th class="p-3">Tenant</th><?php endif; ?>
             <th class="p-3">Code</th><th class="p-3">Nom</th><th class="p-3">Téléphone</th><th class="p-3">Agents</th><th class="p-3">Statut</th><th class="p-3">Actions</th>
         </tr>
@@ -45,10 +49,12 @@ $agencies = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <td class="p-3"><?= e($agency['name']) ?></td>
             <td class="p-3"><?= e($agency['phone']) ?></td>
             <td class="p-3"><?= (int)$agency['total_agents'] ?></td>
-            <td class="p-3"><?= e($agency['status']) ?></td>
-            <td class="p-3"><a href="edit.php?id=<?= (int)$agency['id'] ?>" class="text-blue-600">Modifier</a></td>
+            <td class="p-3"><?= ui_status_badge((string)$agency['status']) ?></td>
+            <td class="p-3"><?= ui_action_link('Modifier', 'edit.php?id=' . (int)$agency['id'], 'secondary') ?></td>
         </tr>
     <?php endforeach; ?>
+    <?php if (!$agencies): ?><tr><td colspan="<?= is_super_admin() ? 7 : 6 ?>"><?php ui_empty_state('Aucune agence trouvée', 'Créez une agence pour organiser vos agents.', '🏢'); ?></td></tr><?php endif; ?>
     </tbody>
 </table>
+</div>
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

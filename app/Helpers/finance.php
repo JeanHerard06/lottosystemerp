@@ -1,7 +1,8 @@
 <?php
+require_once __DIR__ . '/../Services/TimeService.php';
 function finance_reference(string $prefix = 'TRX'): string
 {
-    return $prefix . '-' . date('YmdHis') . '-' . random_int(100, 999);
+    return $prefix . '-' . TimeService::now()->format('YmdHis') . '-' . random_int(100, 999);
 }
 
 function agent_balance(PDO $pdo, int $agentId): float

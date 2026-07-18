@@ -1,90 +1,60 @@
 <?php
 
-function lottery_close_datetime(array $lottery, ?string $date = null): ?DateTime
+require_once __DIR__ . '/../Services/TimeService.php';
+require_once __DIR__ . '/../Services/LotteryTimeService.php';
+
+function lottery_close_datetime(array $lottery, ?string $date = null): ?DateTimeImmutable
 {
-    if (empty($lottery['draw_time'])) {
-        return null;
-    }
-    $drawDate = $date ?: date('Y-m-d');
-    $drawAt = new DateTime($drawDate . ' ' . $lottery['draw_time']);
-    $closeAt = clone $drawAt;
-    $minutes = isset($lottery['close_before_minutes']) ? (int)$lottery['close_before_minutes'] : 10;
-    if ($minutes > 0) {
-        $closeAt->modify('-' . $minutes . ' minutes');
-    }
-    return $closeAt;
+    return LotteryTimeService::closeAt($lottery, $date);
 }
 
-function lottery_draw_datetime(array $lottery, ?string $date = null): ?DateTime
+function lottery_draw_datetime(array $lottery, ?string $date = null): ?DateTimeImmutable
 {
-    if (empty($lottery['draw_time'])) {
-        return null;
-    }
-    return new DateTime(($date ?: date('Y-m-d')) . ' ' . $lottery['draw_time']);
+    return LotteryTimeService::drawAt($lottery, $date);
 }
 
 function lottery_auto_close_if_due(PDO $pdo, array $lottery): array
 {
     $autoClose = (int)($lottery['auto_close_enabled'] ?? 1) === 1;
-    $salesStatus = $lottery['sales_status'] ?? 'open';
-    $closeAt = lottery_close_datetime($lottery);
-
-    if ($autoClose && $salesStatus === 'open' && $closeAt && new DateTime() >= $closeAt) {
-        $stmt = $pdo->prepare("UPDATE lotteries SET sales_status='closed', closed_at=NOW(), closed_by=NULL WHERE id=? AND sales_status='open'");
-        $stmt->execute([(int)$lottery['id']]);
+    if ($autoClose && LotteryTimeService::isSalesClosed($lottery) && ($lottery['sales_status'] ?? 'open') === 'open') {
+        $closedAt = TimeService::sqlNow();
+        $stmt = $pdo->prepare("UPDATE lotteries SET sales_status='closed', closed_at=?, closed_by=NULL WHERE id=? AND sales_status='open'");
+        $stmt->execute([$closedAt, (int)$lottery['id']]);
         $lottery['sales_status'] = 'closed';
-        $lottery['closed_at'] = date('Y-m-d H:i:s');
+        $lottery['closed_at'] = $closedAt;
         $lottery['closed_by'] = null;
     }
-
     return $lottery;
 }
 
 function get_lottery_for_sale(PDO $pdo, ?int $lotteryId, ?int $tenantId = null): ?array
 {
-    if (!$lotteryId) {
-        return null;
-    }
-
+    if (!$lotteryId) return null;
     $sql = 'SELECT * FROM lotteries WHERE id=? AND status=1';
     $params = [$lotteryId];
-
     if ($tenantId && !(function_exists('is_super_admin') && is_super_admin())) {
         $sql .= ' AND (tenant_id=? OR tenant_id IS NULL)';
         $params[] = $tenantId;
     }
-
     $stmt = $pdo->prepare($sql . ' LIMIT 1');
     $stmt->execute($params);
     $lottery = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!$lottery) {
-        return null;
-    }
-
-    return lottery_auto_close_if_due($pdo, $lottery);
+    return $lottery ? lottery_auto_close_if_due($pdo, $lottery) : null;
 }
 
 function validate_lottery_sale_open(PDO $pdo, ?int $lotteryId, ?int $tenantId = null): void
 {
-    if (!$lotteryId) {
-        return;
-    }
-
+    if (!$lotteryId) return;
     $lottery = get_lottery_for_sale($pdo, $lotteryId, $tenantId);
-    if (!$lottery) {
-        throw new RuntimeException('Lotterie inactive, introuvable ou hors tenant.');
+    if (!$lottery) throw new RuntimeException('Lotterie inactive, introuvable ou hors tenant.');
+    $status = $lottery['sales_status'] ?? 'open';
+    if ($status !== 'open') {
+        throw new RuntimeException('Vente refusée: la lotterie ' . ($lottery['name'] ?? '') . ' est ' . ($status === 'drawn' ? 'déjà tirée' : 'fermée') . '.');
     }
-
-    $salesStatus = $lottery['sales_status'] ?? 'open';
-    if ($salesStatus !== 'open') {
-        $label = $salesStatus === 'drawn' ? 'déjà tirée' : 'fermée';
-        throw new RuntimeException('Vente refusée: la lotterie ' . ($lottery['name'] ?? '') . ' est ' . $label . '.');
-    }
-
-    $closeAt = lottery_close_datetime($lottery);
-    if ($closeAt && new DateTime() >= $closeAt) {
-        $stmt = $pdo->prepare("UPDATE lotteries SET sales_status='closed', closed_at=NOW(), closed_by=NULL WHERE id=? AND sales_status='open'");
-        $stmt->execute([(int)$lottery['id']]);
+    if (LotteryTimeService::isSalesClosed($lottery)) {
+        $closedAt = TimeService::sqlNow();
+        $stmt = $pdo->prepare("UPDATE lotteries SET sales_status='closed', closed_at=?, closed_by=NULL WHERE id=? AND sales_status='open'");
+        $stmt->execute([$closedAt, (int)$lottery['id']]);
         throw new RuntimeException('Vente refusée: l’heure limite de vente est dépassée pour ' . ($lottery['name'] ?? 'cette lotterie') . '.');
     }
 }

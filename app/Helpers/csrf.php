@@ -29,3 +29,10 @@ function verify_csrf(): void
         die('Session expirée ou formulaire invalide. Rechargez la page.');
     }
 }
+
+
+// Backward-compatible alias used by older actions.
+function csrf_verify(): void
+{
+    verify_csrf();
+}

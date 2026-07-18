@@ -4,10 +4,10 @@ require_once __DIR__ . '/../app/Helpers/notifications.php';
 $branding = current_branding($pdo);
 $unreadNotifications = function_exists('unread_notifications_count') ? unread_notifications_count($pdo) : 0;
 ?>
-<main class="flex-1">
+<main id="main-content" class="flex-1 min-w-0">
 <header class="bg-white shadow p-4 md:p-5 flex justify-between items-center gap-3 sticky top-0 z-30">
     <div class="flex items-center gap-3 min-w-0">
-        <button type="button" onclick="openMobileSidebar()" class="md:hidden bg-black text-white rounded-lg px-3 py-2 flex items-center justify-center" aria-label="Ouvrir le menu">
+        <button type="button" onclick="openMobileSidebar()" class="md:hidden bg-black text-white rounded-lg px-3 py-2 flex items-center justify-center" aria-label="Ouvrir le menu" aria-controls="mobileSidebar" aria-expanded="false" id="mobileMenuButton">
             ☰
         </button>
         <?php if (!empty($branding['logo_path'])): ?>

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../Services/TimeService.php';
 function current_agent(PDO $pdo): ?array
 {
     $stmt = $pdo->prepare('SELECT * FROM agents WHERE user_id = ? LIMIT 1');
@@ -89,7 +90,7 @@ function can_access_fiche(PDO $pdo, array $fiche): bool
 
 function fiche_code(string $prefix = 'FCH'): string
 {
-    return $prefix . '-' . date('YmdHis') . '-' . random_int(1000, 9999);
+    return $prefix . '-' . TimeService::now()->format('YmdHis') . '-' . random_int(1000, 9999);
 }
 
 function unique_fiche_code(PDO $pdo, string $prefix = 'FCH'): string

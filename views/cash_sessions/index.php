@@ -28,41 +28,57 @@ $sql = "SELECT cs.*, u.name AS agent_name, ag.name AS agency_name, t.name AS ten
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $sessions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$openCount = count(array_filter($sessions, fn($session) => $session['status'] === 'open'));
+$closedCount = count(array_filter($sessions, fn($session) => in_array($session['status'], ['closed','approved','rejected'], true)));
+$totalDifference = array_sum(array_map(fn($session) => (float)($session['difference_amount'] ?? 0), $sessions));
+
+ui_page_header('Sessions de caisse', 'Contrôlez les ouvertures, clôtures, écarts et validations.', [
+    ['label' => 'Ouvrir session', 'href' => '/views/cash_sessions/open.php', 'class' => 'ui-btn ui-btn-warning', 'icon' => '+'],
+]);
 ?>
-<div class="flex justify-between items-center mb-5">
-  <h1 class="text-2xl font-bold">Sessions de caisse</h1>
-  <a href="/views/cash_sessions/open.php" class="bg-yellow-500 text-white px-4 py-2 rounded">+ Ouvrir session</a>
+<div class="ui-stat-grid">
+    <?php ui_stat_card('Sessions visibles', (string)count($sessions), 'blue', 'Selon votre périmètre', null, '💼'); ?>
+    <?php ui_stat_card('Ouvertes', (string)$openCount, $openCount > 0 ? 'green' : 'slate', 'À surveiller', null, '●'); ?>
+    <?php ui_stat_card('Écart cumulé', ui_money((float)$totalDifference), abs($totalDifference) > 0.009 ? 'amber' : 'slate', $closedCount . ' sessions clôturées', null, '±'); ?>
 </div>
 
-<form class="bg-white p-4 rounded shadow mb-5 flex gap-3" method="get">
-  <select name="status" class="border p-3 rounded">
-    <option value="">Tous statuts</option>
-    <?php foreach (['open'=>'Ouverte','closed'=>'Fermée','approved'=>'Approuvée','rejected'=>'Rejetée'] as $k=>$label): ?>
-      <option value="<?= e($k) ?>" <?= $status===$k?'selected':'' ?>><?= e($label) ?></option>
-    <?php endforeach; ?>
-  </select>
-  <button class="bg-black text-white px-5 rounded">Filtrer</button>
+<div class="ui-filter-bar">
+<form class="ui-filter-form" method="get" data-no-responsive-filter="1">
+  <label class="min-w-[12rem] flex-1">
+    <span class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Statut</span>
+    <select name="status" class="form-control">
+      <option value="">Tous statuts</option>
+      <?php foreach (['open'=>'Ouverte','closed'=>'Fermée','approved'=>'Approuvée','rejected'=>'Rejetée'] as $k=>$label): ?>
+        <option value="<?= e($k) ?>" <?= $status===$k?'selected':'' ?>><?= e($label) ?></option>
+      <?php endforeach; ?>
+    </select>
+  </label>
+  <button class="ui-btn ui-btn-primary">Filtrer</button>
 </form>
+</div>
 
-<table class="w-full bg-white rounded shadow">
-  <thead><tr class="bg-gray-200 text-left">
+<div class="ui-table-panel">
+<table class="w-full">
+  <thead><tr class="text-left">
     <th class="p-3">#</th><th class="p-3">Tenant</th><th class="p-3">Agence</th><th class="p-3">Agent</th><th class="p-3">Ouverture</th><th class="p-3">Attendu</th><th class="p-3">Clôture</th><th class="p-3">Diff.</th><th class="p-3">Statut</th><th class="p-3">Action</th>
   </tr></thead>
   <tbody>
   <?php foreach($sessions as $s): ?>
     <tr class="border-b">
-      <td class="p-3">#<?= (int)$s['id'] ?></td>
+      <td class="p-3 font-semibold">#<?= (int)$s['id'] ?></td>
       <td class="p-3"><?= e($s['tenant_name'] ?? '-') ?></td>
       <td class="p-3"><?= e($s['agency_name'] ?? '-') ?></td>
       <td class="p-3"><?= e($s['agent_name'] ?? '-') ?></td>
-      <td class="p-3"><?= number_format((float)$s['opening_amount'],2) ?></td>
-      <td class="p-3"><?= $s['expected_amount'] !== null ? number_format((float)$s['expected_amount'],2) : '-' ?></td>
-      <td class="p-3"><?= $s['closing_amount'] !== null ? number_format((float)$s['closing_amount'],2) : '-' ?></td>
-      <td class="p-3 <?= ((float)($s['difference_amount'] ?? 0) < 0 ? 'text-red-600' : 'text-green-700') ?>"><?= $s['difference_amount'] !== null ? number_format((float)$s['difference_amount'],2) : '-' ?></td>
-      <td class="p-3"><?= e($s['status']) ?></td>
-      <td class="p-3"><a href="/views/cash_sessions/show.php?id=<?= (int)$s['id'] ?>" class="text-blue-600">Voir</a></td>
+      <td class="p-3"><?= ui_money((float)$s['opening_amount']) ?></td>
+      <td class="p-3"><?= $s['expected_amount'] !== null ? ui_money((float)$s['expected_amount']) : '-' ?></td>
+      <td class="p-3"><?= $s['closing_amount'] !== null ? ui_money((float)$s['closing_amount']) : '-' ?></td>
+      <td class="p-3 font-semibold <?= ((float)($s['difference_amount'] ?? 0) < 0 ? 'text-red-600' : 'text-green-700') ?>"><?= $s['difference_amount'] !== null ? ui_money((float)$s['difference_amount']) : '-' ?></td>
+      <td class="p-3"><?= ui_status_badge((string)$s['status']) ?></td>
+      <td class="p-3"><?= ui_action_link('Voir', '/views/cash_sessions/show.php?id=' . (int)$s['id'], 'primary') ?></td>
     </tr>
   <?php endforeach; ?>
+  <?php if (!$sessions): ?><tr><td colspan="10"><?php ui_empty_state('Aucune session trouvée', 'Aucune session ne correspond au filtre actif.', '💼'); ?></td></tr><?php endif; ?>
   </tbody>
 </table>
+</div>
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

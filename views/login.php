@@ -2,6 +2,7 @@
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 require_once __DIR__ . '/../app/Helpers/csrf.php';
 require_once __DIR__ . '/../app/Helpers/security.php';
+send_security_headers(false);
 $error = $_GET['error'] ?? '';
 ?>
 <!DOCTYPE html>

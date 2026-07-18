@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/TimeService.php';
 
 class FinancialLedgerService
 {
@@ -22,7 +23,7 @@ class FinancialLedgerService
             throw new InvalidArgumentException('Journal entry is not balanced.');
         }
 
-        $entryNo = 'JE-' . date('YmdHis') . '-' . random_int(1000, 9999);
+        $entryNo = 'JE-' . TimeService::now()->format('YmdHis') . '-' . random_int(1000, 9999);
 
         $this->pdo->beginTransaction();
         try {

@@ -77,6 +77,7 @@ if (!function_exists('render_sidebar_nav')) {
                     <a href="/views/blocages/index.php" class="block px-4 py-3 rounded hover:bg-yellow-500 hover:text-black transition">Blocages</a>
                     <a href="/views/marriages/index.php" class="block px-4 py-3 rounded hover:bg-yellow-500 hover:text-black transition">Mariages</a>
                     <a href="/views/primes/index.php" class="block px-4 py-3 rounded hover:bg-yellow-500 hover:text-black transition">Primes</a>
+                    <a href="/views/games/index.php" class="block px-4 py-3 rounded hover:bg-yellow-500 hover:text-black transition">Configuration jeux</a>
                 <?php endif; ?>
             <?php endif; ?>
 
@@ -118,6 +119,7 @@ if (!function_exists('render_sidebar_nav')) {
                 <?php endif; ?>
                 <?php if (has_permission($pdo, 'health.view')): ?>
                     <a href="/views/settings/health.php" class="block px-4 py-3 rounded hover:bg-yellow-500 hover:text-black transition">Santé système</a>
+                    <a href="/views/settings/checklist.php" class="block px-4 py-3 rounded hover:bg-yellow-500 hover:text-black transition">Checklist QA</a>
                 <?php endif; ?>
                 <a href="/views/settings/backups.php" class="block px-4 py-3 rounded hover:bg-yellow-500 hover:text-black transition">Sauvegardes</a>
                 <?php if (has_permission($pdo, 'logs.view')): ?>
@@ -139,9 +141,9 @@ if (!function_exists('render_sidebar_nav')) {
     <?php render_sidebar_nav($pdo); ?>
 </aside>
 
-<div id="mobileSidebarBackdrop" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden" onclick="closeMobileSidebar()"></div>
+<div id="mobileSidebarBackdrop" aria-hidden="true" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden" onclick="closeMobileSidebar()"></div>
 
-<aside id="mobileSidebar" class="fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] bg-black text-white p-5 transform -translate-x-full transition-transform duration-300 ease-in-out md:hidden overflow-y-auto shadow-2xl">
+<aside id="mobileSidebar" role="dialog" aria-modal="true" aria-label="Menu principal" tabindex="-1" class="fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] bg-black text-white p-5 transform -translate-x-full transition-transform duration-300 ease-in-out md:hidden overflow-y-auto shadow-2xl">
     <div class="flex items-center justify-between mb-8">
         <h1 class="text-2xl font-bold text-yellow-400">MCS LOTTO</h1>
         <button type="button" onclick="closeMobileSidebar()" class="text-white bg-white/10 hover:bg-white/20 rounded-lg px-3 py-2" aria-label="Fermer le menu">
@@ -159,6 +161,9 @@ function openMobileSidebar() {
     sidebar.classList.remove('-translate-x-full');
     backdrop.classList.remove('hidden');
     document.body.classList.add('overflow-hidden');
+    sidebar.focus();
+    const trigger = document.getElementById('mobileMenuButton');
+    if (trigger) trigger.setAttribute('aria-expanded', 'true');
 }
 
 function closeMobileSidebar() {
@@ -168,6 +173,8 @@ function closeMobileSidebar() {
     sidebar.classList.add('-translate-x-full');
     backdrop.classList.add('hidden');
     document.body.classList.remove('overflow-hidden');
+    const trigger = document.getElementById('mobileMenuButton');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
 }
 
 document.addEventListener('keydown', function (event) {

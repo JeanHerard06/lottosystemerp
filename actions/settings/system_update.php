@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../app/Helpers/system_settings.php';
 require_once __DIR__ . '/../../app/Helpers/audit.php';
 
 require_permission($pdo, 'system.settings');
+require_post();
 csrf_verify();
 
 $allowed = [
