@@ -1,8 +1,8 @@
 <?php
 // Simple backup helper. Configure credentials through environment variables in production.
-$db = getenv('DB_DATABASE') ?: 'lotto_system';
+$db = getenv('DB_DATABASE') ?: 'lotto_erp';
 $user = getenv('DB_USERNAME') ?: 'root';
-$pass = getenv('DB_PASSWORD') ?: '1qaz';
+$pass = getenv('DB_PASSWORD') ?: '';
 $host = getenv('DB_HOST') ?: '127.0.0.1';
 $backupDir = __DIR__ . '/../backups';
 if (!is_dir($backupDir)) {

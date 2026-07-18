@@ -56,3 +56,11 @@
 ### Security
 - Removed state-changing backup creation through GET.
 - Added backup filename validation and path traversal protection.
+
+## 1.0.0-rc1.5 — Core Framework
+
+- Added an incremental application core with dependency injection.
+- Added Application, Container, Config, Request, Router, EventDispatcher and Logger.
+- Added a reusable bootstrap entry point.
+- Preserved compatibility with legacy global classes and endpoints.
+- Added automated core architecture diagnostics.

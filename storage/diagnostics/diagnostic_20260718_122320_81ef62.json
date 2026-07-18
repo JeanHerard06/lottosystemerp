@@ -1,0 +1,92 @@
+{
+    "status": "critical",
+    "generated_at": "2026-07-18T12:23:20-04:00",
+    "php_version": "8.3.6",
+    "timezone": "America/Port-au-Prince",
+    "tests": [
+        {
+            "key": "database",
+            "label": "Base de données",
+            "status": "healthy",
+            "message": "0.58 ms"
+        },
+        {
+            "key": "storage",
+            "label": "Stockage",
+            "status": "healthy",
+            "message": "Accessible en écriture"
+        },
+        {
+            "key": "php",
+            "label": "PHP",
+            "status": "healthy",
+            "message": "8.3.6"
+        },
+        {
+            "key": "ext_pdo_mysql",
+            "label": "Extension pdo_mysql",
+            "status": "healthy",
+            "message": "Chargée"
+        },
+        {
+            "key": "ext_json",
+            "label": "Extension json",
+            "status": "healthy",
+            "message": "Chargée"
+        },
+        {
+            "key": "timezone",
+            "label": "Fuseau horaire",
+            "status": "healthy",
+            "message": "America/Port-au-Prince"
+        },
+        {
+            "key": "disk",
+            "label": "Espace disque",
+            "status": "warning",
+            "message": "8.2% libre"
+        },
+        {
+            "key": "cron",
+            "label": "Planificateur",
+            "status": "warning",
+            "message": "Aucune exécution enregistrée"
+        },
+        {
+            "key": "table_users",
+            "label": "Table users",
+            "status": "critical",
+            "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de '?' à la ligne 1"
+        },
+        {
+            "key": "table_tenants",
+            "label": "Table tenants",
+            "status": "critical",
+            "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de '?' à la ligne 1"
+        },
+        {
+            "key": "table_lotteries",
+            "label": "Table lotteries",
+            "status": "critical",
+            "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de '?' à la ligne 1"
+        },
+        {
+            "key": "table_fiches",
+            "label": "Table fiches",
+            "status": "critical",
+            "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de '?' à la ligne 1"
+        },
+        {
+            "key": "table_audit_logs",
+            "label": "Table audit_logs",
+            "status": "critical",
+            "message": "SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de '?' à la ligne 1"
+        },
+        {
+            "key": "migrations",
+            "label": "Migrations",
+            "status": "healthy",
+            "message": "42 fichier(s) SQL détecté(s)"
+        }
+    ]
+}
