@@ -1,8 +1,10 @@
 <?php
 /**
- * Basic smoke test placeholder for Lotto ERP Enterprise.
- * Run: php scripts/smoke_test.php
+ * CLI Smoke Test
+ * Usage: php scripts/smoke_test.php
  */
+$root = dirname(__DIR__);
+$errors = [];
 
 $required = [
     'config/database.php',
@@ -10,19 +12,31 @@ $required = [
     'upgrade.php',
     'views/dashboard.php',
     'actions/fiche_store.php',
+    'admin/system/health.php',
 ];
 
-$root = dirname(__DIR__);
-$failed = false;
-
 foreach ($required as $file) {
-    $path = $root . DIRECTORY_SEPARATOR . $file;
-    if (!file_exists($path)) {
-        echo "[FAIL] Missing: {$file}\n";
-        $failed = true;
-    } else {
-        echo "[OK] {$file}\n";
+    if (!file_exists($root . '/' . $file)) {
+        $errors[] = "Missing file: {$file}";
     }
 }
 
-exit($failed ? 1 : 0);
+$rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root));
+foreach ($rii as $file) {
+    if ($file->isDir()) continue;
+    if (pathinfo($file->getFilename(), PATHINFO_EXTENSION) !== 'php') continue;
+    $cmd = 'php -l ' . escapeshellarg($file->getPathname());
+    exec($cmd, $out, $code);
+    if ($code !== 0) {
+        $errors[] = "PHP syntax failed: " . $file->getPathname();
+    }
+}
+
+if ($errors) {
+    echo "SMOKE TEST FAILED\n";
+    foreach ($errors as $e) echo "- {$e}\n";
+    exit(1);
+}
+
+echo "SMOKE TEST PASSED\n";
+exit(0);
